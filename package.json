@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "chai": "^4.3.6",
+    "express": "^4.18.1",
+    "lodash": "^4.17.21",
+    "mocha": "^10.0.0",
+    "moodle-client": "^0.5.2",
+    "xmlhttprequest": "^1.8.0"
+  },
+  "name": "12.08.2022",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
