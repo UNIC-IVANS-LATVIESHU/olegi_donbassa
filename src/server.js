@@ -258,6 +258,137 @@ app.post("/createuser", function (req, res) {
   }
 });
 
+app.post("/enroltocourse", function (req, res) {
+  let status = JSON.parse(checkintegrationsettings());
+  if (!status) {
+    return JSON.stringify({
+      status: "error",
+      message: "Service disabled or not properly configured!",
+    });
+  } else {
+    // Creates a random password for the user
+    req.user["password"] = random_str();
+    user_status = JSON.parse(createuser(req.user));
+
+    if (user_status.status) {
+      //Creating a link for a moodle webservice
+      let paramStr =
+        "/webservice/rest/server.php?wstoken=" + md_client_using.moodle_token;
+      paramStr +=
+        "&wsfunction=enrol_manual_enrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
+        user_status.user_id;
+      paramStr += "&enrolments[0][courseid]=" + req.course_id;
+      // Preparing result with all data taken from a moodle
+      let result = get(paramStr);
+      //Checking for an error while enrolling to a course with error detecting algorithm. If there is no error => enrolling to a course
+      if (result) {
+        result = JSON.parse(result);
+        response = new Object(result);
+        if (response.hasOwnProperty("exception")) {
+          res.send(
+              JSON.stringify({
+              status: "error",
+              message: "Error on Enrolling user:" + response.errorcode,
+            })
+          );
+        } else {
+          if (user_status.new_user) {
+            // self(new_user_email(user, product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
+            res.send(
+              JSON.stringify({
+                status: "success",
+                message: "User Created and Enrolled",
+              })
+            );
+          } else {
+            // self(existing_user_email(user, product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
+            res.send(
+              JSON.stringify({
+                status: "success",
+                message: "User Enrolled",
+              })
+            );
+          }
+        }
+      } else {
+        res.send(
+          JSON.stringify({
+            status: "error",
+            message: "Error on enrolling the user into the course.",
+          })
+        );
+      }
+    } else {
+      res.send(
+        JSON.stringify({
+          status: "error",
+          message: user_status.message,
+        })
+      );
+    }
+  }
+});
+
+app.post("/unenrollfromcourse", function (req, res) {
+  // PATCH/DELETE request
+  let status = JSON.parse(checkintegrationsettings());
+  if (status) {
+    let checkexist = JSON.parse(checkifuserexist(req.user_email));
+    if (checkexist.status) {
+      // Creating a link for a moodle webservice
+      let paramStr =
+        "/webservice/rest/server.php?wstoken=" + md_client_using.moodle_token;
+      paramStr +=
+        "&wsfunction=enrol_manual_unenrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
+        checkexist.user_id;
+      paramStr += "&enrolments[0][courseid]=" + req.course_id;
+      // Preparing result with all data taken from a moodle
+      let result = get(paramStr);
+      //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
+      if (result) {
+        result = JSON.parse(result);
+        let response = new Object(result);
+        if (response.hasOwnProperty("exception")) {
+          res.send(
+              JSON.stringify({
+              status: "error",
+              message: "Error on Unenrolling user:" + response.errorcode,
+            })
+          );
+        } else {
+          res.send(
+              JSON.stringify({
+              status: "success",
+              message: "User Removed",
+            })
+          );
+        }
+      } else {
+        res.send(
+            JSON.stringify({
+            status: "error",
+            message: "Error on removing the user from the course.",
+          })
+        );
+      }
+    } else {
+      res.send(
+          JSON.stringify({
+          status: "error",
+          message: "Error on Unenrolling user:" + checkexist.errorcode,
+        })
+      );
+    }
+  } else {
+    res.send(
+        JSON.stringify({
+        status: "error",
+        message: "Service disabled or not properly configured!",
+      })
+    );
+  }
+});
+
 app.patch("/squares/:x/:y/paint", (req, res, next) => {
   const x = req.params.x;
   const y = req.params.y;
