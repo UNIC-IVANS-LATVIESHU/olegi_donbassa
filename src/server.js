@@ -1,7 +1,7 @@
+// Installed three external libraries "lodash", "xmlhttprequest" and "moodle-client", "express" with "cookie-parser"
 var express = require("express");
-var app = express(); // This responds with "Hello World" on the homepage
-
-// Installed three external libraries "lodash", "xmlhttprequest" and "moodle-client"
+var app = express();
+var cookieParser = require("cookie-parser"); // middleware
 var moodle_client = require("moodle-client");
 var _ = require("lodash");
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
@@ -131,6 +131,8 @@ function random_str(length = 8, add_dashes = false, available_sets = "luds") {
   dash_str += password;
   return dash_str;
 }
+
+app.use(express.static('public'));
 
 app.get("/checkifuserexist", function (req, res) {
   let status = JSON.parse(checkintegrationsettings());
@@ -329,7 +331,7 @@ app.post("/enroltocourse", function (req, res) {
   }
 });
 
-app.post("/unenrollfromcourse", function (req, res) {
+app.patch("/unenrollfromcourse", function (req, res) {
   // PATCH/DELETE request
   let status = JSON.parse(checkintegrationsettings());
   if (status) {
@@ -389,42 +391,9 @@ app.post("/unenrollfromcourse", function (req, res) {
   }
 });
 
-app.patch("/squares/:x/:y/paint", (req, res, next) => {
-  const x = req.params.x;
-  const y = req.params.y;
-  const changes = req.body;
-
-  const originalInformation = retrieveOriginalInformationInMatrix(x, y);
-  // originalInformation will be {"x": 1, "y": 2, "painted": false }    let modifiedInformation = originalInformation
-  if (changes.painted !== undefined) {
-    modifiedInformation.painted = changes.painted; // Updates new information with desired changes
-  }
-  // Other possible changes like changes.x or changes.ysaveModifiedInformation(x, y, modifiedInformation);
-
-  res.send(modifiedInformation); // Returns modified information back to user
-});
-
-app.delete("/del_user", function (req, res) {
-  console.log("Got a DELETE request for /del_user");
-  res.send("Hello DELETE");
-}); // This responds a GET request for the /list_user page.
-
-app.get("/list_user", function (req, res) {
-  console.log("Got a GET request for /list_user");
-  res.send("Page Listing");
-}); // This responds a GET request for abcd, abxcd, ab123cd, and so on
-
-app.get("/ab*cd", function (req, res) {
-  console.log("Got a GET request for /ab*cd");
-  res.send("Page Pattern Match");
-});
-
-var server = app.listen(8081, function () {
-  // var host = server.address().address;
-  // var port = server.address().port;
-
-  var host = "localhost";
-  var port = 8081;
+var server = app.listen(3030, function () {
+  var host = server.address().address;
+  var port = server.address().port;
 
   console.log("Example app listening at http://%s:%s", host, port);
 });
