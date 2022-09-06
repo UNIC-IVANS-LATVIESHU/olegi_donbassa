@@ -1,10 +1,12 @@
 // Installed three external libraries "lodash", "xmlhttprequest" and "moodle-client", "express" with "cookie-parser"
-var express = require("express");
-var app = express();
-var cookieParser = require("cookie-parser"); // middleware
+// var cookieParser = require("cookie-parser"); // middleware
 var moodle_client = require("moodle-client");
 var _ = require("lodash");
-var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+var axios = require("axios");
+// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest
+
+var express = require("express");
+var app = express();
 
 // This class contains constructor with all moodle information
 class md_client {
@@ -40,16 +42,54 @@ function isEmpty(object) {
   return Object.keys(object).length === 0;
 }
 
+// ? FIXME:  Delete this line of code if http will work
 /** This function creates a GET request to the moodle
  * @param  {String} theUrl Contains the path for the link
  * @return {Object} That contains request data
  */
 function get(theUrl) {
+  console.log(theUrl);
   // GET request
-  var xmlHttp = new XMLHttpRequest();
-  xmlHttp.open("GET", md_client_using.moodle_url + theUrl, false); // false for synchronous request
-  xmlHttp.send(null);
-  return xmlHttp.responseText;
+  axios
+
+    .get(theUrl)
+    .then((res) => {
+      console.log(res);
+    })
+    .catch((error) => {
+      return error;
+    });
+}
+
+function getParams(firstUrl, secondUrl) {
+  const theUrl =
+    md_client_using.moodle_url +
+    firstUrl +
+    md_client_using.moodle_token +
+    secondUrl;
+  // GET request
+  axios
+    .get(theUrl)
+    .then((res) => {
+      return res.data;
+    })
+    .catch((error) => {
+      return error;
+    });
+}
+
+function post(theUrl, body) {
+  //POST request
+  axios
+    .post(theUrl, {
+      body,
+    })
+    .then((res) => {
+      return res;
+    })
+    .catch((error) => {
+      return error;
+    });
 }
 
 /**  This function checks if settings was integrated
@@ -132,7 +172,7 @@ function random_str(length = 8, add_dashes = false, available_sets = "luds") {
   return dash_str;
 }
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 app.get("/checkifuserexist", function (req, res) {
   let status = JSON.parse(checkintegrationsettings());
@@ -146,15 +186,15 @@ app.get("/checkifuserexist", function (req, res) {
     );
   } else {
     //Creating a link for a moodle webservice
-    let params =
-      "/webservice/rest/server.php?wstoken=" +
-      md_client_using.moodle_token +
+    let firstParams = "/webservice/rest/server.php?wstoken=";
+    let secondParams =
       "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
-      encodeURI(req["email"]) +
+      encodeURI(req.query.email) +
       "&moodlewsrestformat=json";
     // Preparing result with all users data taken from a moodle
-    let result = get(params);
-    result = JSON.parse(result);
+    let result = getParams(firstParams, secondParams); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+    console.log(result);
     //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
     if (result.users.length < 1) {
       res.send(
@@ -200,26 +240,25 @@ app.post("/createuser", function (req, res) {
         );
       } else {
         //Creating a link for a moodle webservice
-        let paramStr =
-          "/webservice/rest/server.php?wstoken=" + md_client_using.moodle_token;
-        paramStr +=
+        let firstParams = "/webservice/rest/server.php?wstoken=";
+        let secondParams =
           "&wsfunction=core_user_create_users&users[0][username]=" +
           encodeURI(req.user["email"].toLowerCase());
-        paramStr +=
+        secondParams +=
           "&users[0][password]=" +
           encodeURI(req.user["password"]) +
           "&users[0][email]=" +
           encodeURI(req.user["email"]);
-        paramStr +=
+        secondParams +=
           "&users[0][firstname]=" +
           encodeURI(req.user["name"]) +
           "&users[0][lastname]=" +
           encodeURI(req.user["last"]);
-        paramStr +=
+        secondParams +=
           "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
-        paramStr += "&moodlewsrestformat=json";
+        secondParams += "&moodlewsrestformat=json";
         // Preparing result with all users data taken from a moodle
-        let result = JSON.parse(get(paramStr));
+        let result = JSON.parse(getParams(firstParams, secondParams));
         //Checking for an error while creating a user with error detecting algorithm. If there is no error => creating a user
         if (result) {
           if (result.exception) {
@@ -263,10 +302,12 @@ app.post("/createuser", function (req, res) {
 app.post("/enroltocourse", function (req, res) {
   let status = JSON.parse(checkintegrationsettings());
   if (!status) {
-    return JSON.stringify({
-      status: "error",
-      message: "Service disabled or not properly configured!",
-    });
+    res.send(
+      JSON.stringify({
+        status: "error",
+        message: "Service disabled or not properly configured!",
+      })
+    );
   } else {
     // Creates a random password for the user
     req.user["password"] = random_str();
@@ -274,21 +315,20 @@ app.post("/enroltocourse", function (req, res) {
 
     if (user_status.status) {
       //Creating a link for a moodle webservice
-      let paramStr =
-        "/webservice/rest/server.php?wstoken=" + md_client_using.moodle_token;
-      paramStr +=
+      let firstParams = "/webservice/rest/server.php?wstoken=";
+      let secondParams =
         "&wsfunction=enrol_manual_enrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
         user_status.user_id;
-      paramStr += "&enrolments[0][courseid]=" + req.course_id;
+      secondParams += "&enrolments[0][courseid]=" + req.course_id;
       // Preparing result with all data taken from a moodle
-      let result = get(paramStr);
+      let result = getParams(firstParams, secondParams);
       //Checking for an error while enrolling to a course with error detecting algorithm. If there is no error => enrolling to a course
       if (result) {
         result = JSON.parse(result);
         response = new Object(result);
         if (response.hasOwnProperty("exception")) {
           res.send(
-              JSON.stringify({
+            JSON.stringify({
               status: "error",
               message: "Error on Enrolling user:" + response.errorcode,
             })
@@ -338,28 +378,27 @@ app.patch("/unenrollfromcourse", function (req, res) {
     let checkexist = JSON.parse(checkifuserexist(req.user_email));
     if (checkexist.status) {
       // Creating a link for a moodle webservice
-      let paramStr =
-        "/webservice/rest/server.php?wstoken=" + md_client_using.moodle_token;
-      paramStr +=
+      let firstParams = "/webservice/rest/server.php?wstoken=";
+      let secondParams =
         "&wsfunction=enrol_manual_unenrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
         checkexist.user_id;
-      paramStr += "&enrolments[0][courseid]=" + req.course_id;
+      secondParams += "&enrolments[0][courseid]=" + req.course_id;
       // Preparing result with all data taken from a moodle
-      let result = get(paramStr);
+      let result = getParams(firstParams, secondParams);
       //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
       if (result) {
         result = JSON.parse(result);
         let response = new Object(result);
         if (response.hasOwnProperty("exception")) {
           res.send(
-              JSON.stringify({
+            JSON.stringify({
               status: "error",
               message: "Error on Unenrolling user:" + response.errorcode,
             })
           );
         } else {
           res.send(
-              JSON.stringify({
+            JSON.stringify({
               status: "success",
               message: "User Removed",
             })
@@ -367,7 +406,7 @@ app.patch("/unenrollfromcourse", function (req, res) {
         }
       } else {
         res.send(
-            JSON.stringify({
+          JSON.stringify({
             status: "error",
             message: "Error on removing the user from the course.",
           })
@@ -375,7 +414,7 @@ app.patch("/unenrollfromcourse", function (req, res) {
       }
     } else {
       res.send(
-          JSON.stringify({
+        JSON.stringify({
           status: "error",
           message: "Error on Unenrolling user:" + checkexist.errorcode,
         })
@@ -383,7 +422,7 @@ app.patch("/unenrollfromcourse", function (req, res) {
     }
   } else {
     res.send(
-        JSON.stringify({
+      JSON.stringify({
         status: "error",
         message: "Service disabled or not properly configured!",
       })
