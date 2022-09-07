@@ -61,14 +61,25 @@ function get(theUrl) {
     });
 }
 
-function getParams(firstUrl, secondUrl) {
+//callback function
+const example = async (param1,param2,cb){
+  return cb(true,param1+param2);
+}
+
+example(2,1,(status,result)=>{
+  console.log(result);
+})
+
+
+//assynchronous function (promises)
+const getParams= async(firstUrl, secondUrl)=>{
   const theUrl =
     md_client_using.moodle_url +
     firstUrl +
     md_client_using.moodle_token +
     secondUrl;
   // GET request
-  axios
+  await axios
     .get(theUrl)
     .then((res) => {
       return res.data;
@@ -193,7 +204,6 @@ app.get("/checkifuserexist", function (req, res) {
       "&moodlewsrestformat=json";
     // Preparing result with all users data taken from a moodle
     let result = getParams(firstParams, secondParams); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
     console.log(result);
     //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
     if (result.users.length < 1) {
