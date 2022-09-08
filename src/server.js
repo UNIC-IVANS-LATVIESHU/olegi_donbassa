@@ -281,10 +281,10 @@ app.post("/enroltocourse", function (req, res) {
       axios
       .post("localhost:3030/createuser", req.user) // TODO: SHOULD MAKE URL AS A CONSTANCE SOMEWHERE
       .then((res) => {
-        let user_status = res;
+        user_status = res;
       })
       .catch((error) => {
-        let user_status = error;
+        user_status = error;
       }));
 
     if (user_status.status) {
@@ -359,12 +359,12 @@ app.patch("/unenrollfromcourse", function (req, res) {
     let result = getParams(firstParams, secondParams);
     //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
     if (result.users.length < 1) {
-      let checkexist = {
+      checkexist = {
           status: "success",
           exist: false,
         }
     } else {
-      let checkexist = {
+      checkexist = {
           status: "success",
           exist: true,
           user_id: result.users[0].id,
