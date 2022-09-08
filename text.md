@@ -1,0 +1,1 @@
+[![Node.js Package](https://github.com/UNIC-IVANS-LATVIESHU/olegi_donbassa/actions/workflows/npm-publish-github-packages.yml/badge.svg?branch=main&event=workflow_run)](https://github.com/UNIC-IVANS-LATVIESHU/olegi_donbassa/actions/workflows/npm-publish-github-packages.yml)
