@@ -3,7 +3,6 @@
 var moodle_client = require("moodle-client");
 var _ = require("lodash");
 var axios = require("axios");
-// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest
 
 var express = require("express");
 var app = express();
@@ -48,10 +47,8 @@ function isEmpty(object) {
  * @return {Object} That contains request data
  */
 function get(theUrl) {
-  console.log(theUrl);
   // GET request
   axios
-
     .get(theUrl)
     .then((res) => {
       console.log(res);
@@ -185,46 +182,6 @@ function random_str(length = 8, add_dashes = false, available_sets = "luds") {
 
 app.use(express.static("public"));
 
-app.get("/checkifuserexist", function (req, res) {
-  let status = JSON.parse(checkintegrationsettings());
-  // If status does not contain any information send an error
-  if (!status) {
-    res.send(
-      JSON.stringify({
-        status: "error",
-        message: "Service disabled or not properly configured!",
-      })
-    );
-  } else {
-    //Creating a link for a moodle webservice
-    let firstParams = "/webservice/rest/server.php?wstoken=";
-    let secondParams =
-      "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
-      encodeURI(req.query.email) +
-      "&moodlewsrestformat=json";
-    // Preparing result with all users data taken from a moodle
-    let result = getParams(firstParams, secondParams); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    console.log(result);
-    //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
-    if (result.users.length < 1) {
-      res.send(
-        JSON.stringify({
-          status: "success",
-          exist: false,
-        })
-      );
-    } else {
-      res.send(
-        JSON.stringify({
-          status: "success",
-          exist: true,
-          user_id: result.users[0].id,
-        })
-      );
-    }
-  }
-});
-
 app.post("/createuser", function (req, res) {
   // POST request
   let status = JSON.parse(checkintegrationsettings());
@@ -237,7 +194,28 @@ app.post("/createuser", function (req, res) {
       })
     );
   } else {
-    checkexist = JSON.parse(checkifuserexist(req.user["email"]));
+
+    // Check if user exists
+    let firstParams = "/webservice/rest/server.php?wstoken=";
+    let secondParams = "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
+      encodeURI(req.body.user.email) +
+      "&moodlewsrestformat=json";
+    // Preparing result with all users data taken from a moodle
+    let result = getParams(firstParams, secondParams);
+    //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
+    if (result.users.length < 1) {
+      let checkexist = {
+          status: "success",
+          exist: false,
+        }
+    } else {
+      let checkexist = {
+          status: "success",
+          exist: true,
+          user_id: result.users[0].id,
+        }
+    }
+
     if (checkexist.status) {
       if (checkexist.exist) {
         res.send(
@@ -250,8 +228,8 @@ app.post("/createuser", function (req, res) {
         );
       } else {
         //Creating a link for a moodle webservice
-        let firstParams = "/webservice/rest/server.php?wstoken=";
-        let secondParams =
+        firstParams = "/webservice/rest/server.php?wstoken=";
+        secondParams =
           "&wsfunction=core_user_create_users&users[0][username]=" +
           encodeURI(req.user["email"].toLowerCase());
         secondParams +=
@@ -385,7 +363,28 @@ app.patch("/unenrollfromcourse", function (req, res) {
   // PATCH/DELETE request
   let status = JSON.parse(checkintegrationsettings());
   if (status) {
-    let checkexist = JSON.parse(checkifuserexist(req.user_email));
+    
+        // Check if user exists
+    let firstParams = "/webservice/rest/server.php?wstoken=";
+    let secondParams = "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
+      encodeURI(req.body.user_email) +
+      "&moodlewsrestformat=json";
+    // Preparing result with all users data taken from a moodle
+    let result = getParams(firstParams, secondParams);
+    //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
+    if (result.users.length < 1) {
+      let checkexist = {
+          status: "success",
+          exist: false,
+        }
+    } else {
+      let checkexist = {
+          status: "success",
+          exist: true,
+          user_id: result.users[0].id,
+        }
+    }
+
     if (checkexist.status) {
       // Creating a link for a moodle webservice
       let firstParams = "/webservice/rest/server.php?wstoken=";
