@@ -46,17 +46,7 @@ function isEmpty(object) {
  * @param  {String} theUrl Contains the path for the link
  * @return {Object} That contains request data
  */
-function get(theUrl) {
-  // GET request
-  axios
-    .get(theUrl)
-    .then((res) => {
-      console.log(res);
-    })
-    .catch((error) => {
-      return error;
-    });
-}
+
 
 //callback function
 const example = async (param1,param2,cb){
@@ -86,19 +76,6 @@ const getParams= async(firstUrl, secondUrl)=>{
     });
 }
 
-function post(theUrl, body) {
-  //POST request
-  axios
-    .post(theUrl, {
-      body,
-    })
-    .then((res) => {
-      return res;
-    })
-    .catch((error) => {
-      return error;
-    });
-}
 
 /**  This function checks if settings was integrated
  * @return String JSON Object that contains information about condition of the settings
@@ -299,7 +276,16 @@ app.post("/enroltocourse", function (req, res) {
   } else {
     // Creates a random password for the user
     req.user["password"] = random_str();
-    user_status = JSON.parse(createuser(req.user));
+
+    user_status = JSON.parse(
+      axios
+      .post("localhost:3030/createuser", req.user) // TODO: SHOULD MAKE URL AS A CONSTANCE SOMEWHERE
+      .then((res) => {
+        let user_status = res;
+      })
+      .catch((error) => {
+        let user_status = error;
+      }));
 
     if (user_status.status) {
       //Creating a link for a moodle webservice
