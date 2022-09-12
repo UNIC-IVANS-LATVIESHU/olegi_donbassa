@@ -1,8 +1,6 @@
 const dotenv = require("dotenv");
 var moodle_client = require("moodle-client");
-
-dotenv.config({ path: "./vars/config.env" });
-
+dotenv.config();
 moodle_client
   .init({
     wwwroot: process.env.MOODLE_URL, //Entering your modle url
@@ -23,7 +21,7 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3030;
 const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
