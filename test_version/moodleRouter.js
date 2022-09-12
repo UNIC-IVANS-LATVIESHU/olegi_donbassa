@@ -1,10 +1,9 @@
 var express = require("express");
 var axios = require("axios");
-require("dotenv").config();
 var router = express.Router();
 
 router.route("/createuser").post(
-  (createUser = (req, res, next) => {
+  (createUser = (req, res) => {
     let theUrl =
       "/webservice/rest/server.php?wstoken=" +
       "0027fd789e4fb844c72e096249d9a6b2" + // ! TODO: TAKE DATA FROM config.env
@@ -12,7 +11,6 @@ router.route("/createuser").post(
       encodeURI(req.body.user["email"]) +
       "&moodlewsrestformat=json";
 
-    console.log("1 STEP - SUCCESSFULL! ✅");
     axios
       .get("https://mdl.webdevteam.unic.ac.cy" + theUrl) // ! TODO: TAKE DATA FROM config.env
       .then((result) => {
@@ -60,8 +58,6 @@ router.route("/createuser").post(
             newUrl +=
               "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
             newUrl += "&moodlewsrestformat=json";
-
-            console.log("4 STEP - SUCCESSFULL! ✅");
 
             axios
               .get("https://mdl.webdevteam.unic.ac.cy" + newUrl) // ! TODO: TAKE DATA FROM config.env
