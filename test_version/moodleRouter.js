@@ -16,16 +16,12 @@ router.route("/createuser").post(
     axios
       .get("https://mdl.webdevteam.unic.ac.cy" + theUrl) // ! TODO: TAKE DATA FROM config.env
       .then((result) => {
-        console.log("2 STEP - SUCCESSFULL! ✅");
-
-        if (result.data.length < 1) {
-          console.log("2.5 STEP - SUCCESSFULL! ✅");
+        if (result.data.users.length < 1) {
           checkexist = {
             status: "success",
             exist: false,
           };
         } else {
-          console.log("2.5 STEP - NOT SUCCESSFULL! 💥");
           checkexist = {
             status: "success",
             exist: true,
@@ -35,7 +31,6 @@ router.route("/createuser").post(
 
         if (checkexist.status) {
           if (checkexist.exist) {
-            console.log("3 STEP - SUCCESSFULL! ✅");
             res.send(
               JSON.stringify({
                 status: "success",
@@ -45,75 +40,98 @@ router.route("/createuser").post(
               })
             );
           } else {
-            console.log("3 STEP - NOT SUCCESSFULL! 💥");
             //Creating a link for a moodle webservice
-            theUrl =
+            var newUrl =
               "/webservice/rest/server.php?wstoken=" +
               "0027fd789e4fb844c72e096249d9a6b2"; // ! TODO: TAKE DATA FROM config.env
-            theUrl +=
+            newUrl +=
               "&wsfunction=core_user_create_users&users[0][username]=" +
-              encodeURI(req.user["email"].toLowerCase());
-            theUrl +=
+              encodeURI(req.body.user["email"].toLowerCase());
+            newUrl +=
               "&users[0][password]=" +
-              encodeURI(req.user["password"]) +
+              encodeURI(req.body.user["password"]) +
               "&users[0][email]=" +
-              encodeURI(req.user["email"]);
-            theUrl +=
+              encodeURI(req.body.user["email"]);
+            newUrl +=
               "&users[0][firstname]=" +
-              encodeURI(req.user["name"]) +
+              encodeURI(req.body.user["name"]) +
               "&users[0][lastname]=" +
-              encodeURI(req.user["last"]);
-            theUrl +=
+              encodeURI(req.body.user["last"]);
+            newUrl +=
               "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
-            theUrl += "&moodlewsrestformat=json";
-            // Preparing result with all users data taken from a moodle
-            // axios
-            //   .get("https://mdl.webdevteam.unic.ac.cy" + theUrl) // ! TODO: TAKE DATA FROM config.env
-            //   .then((main_result) => {
-            //     if (main_result) {
-            //       if (main_result.exception) {
-            //         res.send(
-            //           JSON.stringify({
-            //             status: "error",
-            //             message: `Error on Creating user: ${main_result.errorcode}`,
-            //           })
-            //         );
-            //       } else {
-            //         moodle_user_id = main_result.data.user[0].id;
-            //         res.send(
-            //           JSON.stringify({
-            //             status: "success",
-            //             new_user: true,
-            //             user_id: moodle_user_id,
-            //             message: "User created",
-            //           })
-            //         );
-            //       }
-            //     } else {
-            //       res.send(
-            //         JSON.stringify({
-            //           status: "error",
-            //           message: "Error on creating the user",
-            //         })
-            //       );
-            //     }
-            //   })
-            //   .catch((error) => {
-            //     return error;
-            //   });
+            newUrl += "&moodlewsrestformat=json";
+
+            console.log("4 STEP - SUCCESSFULL! ✅");
+
+            axios
+              .get("https://mdl.webdevteam.unic.ac.cy" + newUrl) // ! TODO: TAKE DATA FROM config.env
+              .then((main_result) => {
+                if (main_result.data.exception) {
+                  res.send(
+                    JSON.stringify({
+                      status: "error",
+                      message: `Error on Creating user: ${main_result.errorcode}`,
+                    })
+                  );
+                } else {
+                  // ? FIXME: It does not send any response back
+                  res.send(
+                    JSON.stringify({
+                      status: "success",
+                      new_user: true,
+                      user_id: main_result.data[0].id,
+                      message: "User created",
+                    })
+                  );
+                }
+              })
+              .catch((error) => {
+                if (error.response) {
+                  // The request was made and the server responded with a status code
+                  // that falls out of the range of 2xx
+                  console.log(error.response.data);
+                  console.log(error.response.status);
+                  console.log(error.response.headers);
+                } else if (error.request) {
+                  // The request was made but no response was received
+                  // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+                  // http.ClientRequest in node.js
+                  console.log(error.request);
+                } else {
+                  // Something happened in setting up the request that triggered an Error
+                  console.log("Error", error.message);
+                }
+                console.log(error);
+              });
+
             //Checking for an error while creating a user with error detecting algorithm. If there is no error => creating a user
           }
         } else {
           res.send(
             JSON.stringify({
               status: "error",
-              message: checkexist.message,
+              message: checkexist,
             })
           );
         }
       })
       .catch((error) => {
-        return error;
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+          console.log(error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log("Error", error.message);
+        }
+        console.log(error);
       });
   })
 );
