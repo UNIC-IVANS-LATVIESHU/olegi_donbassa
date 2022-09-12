@@ -3,9 +3,17 @@
 var moodle_client = require("moodle-client");
 var _ = require("lodash");
 var axios = require("axios");
-
+var bodyParser = require("body-parser");
 var express = require("express");
 var app = express();
+
+app.use(express.static("public"));
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 
 // This class contains constructor with all moodle information
 class md_client {
@@ -47,35 +55,23 @@ function isEmpty(object) {
  * @return {Object} That contains request data
  */
 
-
-//callback function
-const example = async (param1,param2,cb){
-  return cb(true,param1+param2);
-}
-
-example(2,1,(status,result)=>{
-  console.log(result);
-})
-
-
 //assynchronous function (promises)
-const getParams= async(firstUrl, secondUrl)=>{
+function getParams(firstUrl, secondUrl, callback) {
   const theUrl =
     md_client_using.moodle_url +
     firstUrl +
     md_client_using.moodle_token +
     secondUrl;
   // GET request
-  await axios
+  axios
     .get(theUrl)
     .then((res) => {
-      return res.data;
+      return callback(res.data);
     })
     .catch((error) => {
-      return error;
+      return callback(error);
     });
 }
-
 
 /**  This function checks if settings was integrated
  * @return String JSON Object that contains information about condition of the settings
@@ -157,40 +153,44 @@ function random_str(length = 8, add_dashes = false, available_sets = "luds") {
   return dash_str;
 }
 
-app.use(express.static("public"));
-
 app.post("/createuser", function (req, res) {
-  // POST request
-  let status = JSON.parse(checkintegrationsettings());
-  // If status does not contain any information send an error
-  if (!status) {
-    res.send(
-      JSON.stringify({
-        status: error,
-        message: "Service disabled or not properly configured!",
-      })
-    );
-  } else {
+  getParams(firstParams, secondParams, function (err, result) {
+    // // POST request
+    // let status = JSON.parse(checkintegrationsettings());
+    // // If status does not contain any information send an error
+    // if (!status) {
+    //   res.send(
+    //     JSON.stringify({
+    //       status: error,
+    //       message: "Service disabled or not properly configured!",
+    //     })
+    //   );
+
+    // } else {
 
     // Check if user exists
     let firstParams = "/webservice/rest/server.php?wstoken=";
-    let secondParams = "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
-      encodeURI(req.body.user.email) +
+    let secondParams =
+      "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
+      encodeURI(req.body.user["email"]) +
       "&moodlewsrestformat=json";
+    //!
     // Preparing result with all users data taken from a moodle
-    let result = getParams(firstParams, secondParams);
+    // let result = getParams(firstParams, secondParams);
+    // !
+
     //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
     if (result.users.length < 1) {
-      let checkexist = {
-          status: "success",
-          exist: false,
-        }
+      checkexist = {
+        status: "success",
+        exist: false,
+      };
     } else {
-      let checkexist = {
-          status: "success",
-          exist: true,
-          user_id: result.users[0].id,
-        }
+      checkexist = {
+        status: "success",
+        exist: true,
+        user_id: result.users[0].id,
+      };
     }
 
     if (checkexist.status) {
@@ -261,7 +261,8 @@ app.post("/createuser", function (req, res) {
         })
       );
     }
-  }
+    // }
+  });
 });
 
 app.post("/enroltocourse", function (req, res) {
@@ -279,13 +280,14 @@ app.post("/enroltocourse", function (req, res) {
 
     user_status = JSON.parse(
       axios
-      .post("localhost:3030/createuser", req.user) // TODO: SHOULD MAKE URL AS A CONSTANCE SOMEWHERE
-      .then((res) => {
-        user_status = res;
-      })
-      .catch((error) => {
-        user_status = error;
-      }));
+        .post("localhost:3030/createuser", req.user) // TODO: SHOULD MAKE URL AS A CONSTANCE SOMEWHERE
+        .then((res) => {
+          user_status = res;
+        })
+        .catch((error) => {
+          user_status = error;
+        })
+    );
 
     if (user_status.status) {
       //Creating a link for a moodle webservice
@@ -349,10 +351,10 @@ app.patch("/unenrollfromcourse", function (req, res) {
   // PATCH/DELETE request
   let status = JSON.parse(checkintegrationsettings());
   if (status) {
-    
-        // Check if user exists
+    // Check if user exists
     let firstParams = "/webservice/rest/server.php?wstoken=";
-    let secondParams = "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
+    let secondParams =
+      "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
       encodeURI(req.body.user_email) +
       "&moodlewsrestformat=json";
     // Preparing result with all users data taken from a moodle
@@ -360,15 +362,15 @@ app.patch("/unenrollfromcourse", function (req, res) {
     //Checking for amount of the users. And if there is more than 0 user, then send the first ones id in a string
     if (result.users.length < 1) {
       checkexist = {
-          status: "success",
-          exist: false,
-        }
+        status: "success",
+        exist: false,
+      };
     } else {
       checkexist = {
-          status: "success",
-          exist: true,
-          user_id: result.users[0].id,
-        }
+        status: "success",
+        exist: true,
+        user_id: result.users[0].id,
+      };
     }
 
     if (checkexist.status) {
