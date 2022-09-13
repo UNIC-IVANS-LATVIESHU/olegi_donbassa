@@ -202,4 +202,77 @@ router.route("/enroltocourse").post(
   })
 );
 
+router.route("/unenrollfromcourse").post(
+  (unenrollfromcourse = (req, res) => {
+    let theUrl =
+      "/webservice/rest/server.php?wstoken=" +
+      process.env.MOODLE_TOKEN +
+      "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
+      encodeURI(req.body.user_email) +
+      "&moodlewsrestformat=json";
+    axios
+      .get(process.env.MOODLE_URL + theUrl)
+      .then((result) => {
+        if (result.data.users[0]) {
+          // ! changed concept of this check. Should decide which is better
+          // Creating a link for a moodle webservice
+          let newUrl =
+            "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
+          newUrl +=
+            "&wsfunction=enrol_manual_unenrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
+            result.data.users[0].id;
+          newUrl += "&enrolments[0][courseid]=" + req.body.course_id;
+          // Preparing result with all data taken from a moodle
+          axios
+            .get(process.env.MOODLE_URL + newUrl)
+            .then((response) => {
+              //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
+              if (response.hasOwnProperty("exception")) {
+                res.send(
+                  JSON.stringify({
+                    status: false,
+                    message: "Error on Unenrolling user:" + response.errorcode, // ? FIXME: Should do smth with that
+                    data: req.body,
+                  })
+                );
+              } else {
+                res.send(
+                  JSON.stringify({
+                    status: true,
+                    message: "User Removed",
+                  })
+                );
+              }
+            })
+            .catch((error) => {
+              res.send(
+                JSON.stringify({
+                  status: false,
+                  message: error.message,
+                  data: req.body,
+                })
+              );
+            });
+        } else {
+          res.send(
+            JSON.stringify({
+              status: false,
+              message: "Error on Unenrolling user", // ? FIXME: to check it change "email" in POSTMAN to smth else
+              data: req.body,
+            })
+          );
+        }
+      })
+      .catch((error) => {
+        res.send(
+          JSON.stringify({
+            status: false,
+            message: error.message,
+            data: req.body,
+          })
+        );
+      });
+  })
+);
+
 module.exports = router;
