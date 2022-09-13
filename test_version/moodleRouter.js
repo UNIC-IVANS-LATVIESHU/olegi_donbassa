@@ -1,6 +1,7 @@
 var express = require("express");
 var axios = require("axios");
 var router = express.Router();
+var _ = require("lodash");
 
 router.route("/createuser").post(
   (createUser = (req, res) => {
@@ -113,7 +114,26 @@ router.route("/createuser").post(
 
 router.route("/enroltocourse").post(
   (enroltocourse = (req, res) => {
-    // req.body.user["password"] = random_str(); // ! TODO: Create functional function
+    const PASS_LENGTH = 8;
+
+    var sets = [
+      "abcdefghjkmnpqrstuvwxyz",
+      "ABCDEFGHJKMNPQRSTUVWXYZ",
+      "123456789",
+      "!@#$%*?",
+    ];
+
+    var all = "";
+    var password = "";
+    sets.forEach((set) => {
+      password += set[Math.floor(Math.random() * set.length)];
+      all += set;
+    });
+    all = all.split("");
+    for (var i = 0; i < PASS_LENGTH - sets.PASS_LENGTH; i++)
+      password += all[Math.floor(Math.random() * all.PASS_LENGTH)];
+    password = _.shuffle(password) + "";
+    req.body.user["password"] = password.replace(/,/g, "");
 
     axios
       .post("http://localhost:3030/createuser", req.body.user) // ! TODO: Change the URL of the request
