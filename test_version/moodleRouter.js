@@ -27,84 +27,74 @@ router.route("/createuser").post(
           };
         }
 
-        if (checkexist.status) {
-          if (checkexist.exist) {
-            res.send(
-              JSON.stringify({
-                status: true,
-                new_user: false,
-                user_id: checkexist.user_id,
-                message: "User Already Exist in moodle",
-              })
-            );
-          } else {
-            //Creating a link for a moodle webservice
-            var newUrl =
-              "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
-            newUrl +=
-              "&wsfunction=core_user_create_users&users[0][username]=" +
-              encodeURI(req.body["email"].toLowerCase());
-            newUrl +=
-              "&users[0][password]=" +
-              encodeURI(req.body["password"]) +
-              "&users[0][email]=" +
-              encodeURI(req.body["email"]);
-            newUrl +=
-              "&users[0][firstname]=" +
-              encodeURI(req.body["name"]) +
-              "&users[0][lastname]=" +
-              encodeURI(req.body["last"]);
-            newUrl +=
-              "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
-            newUrl += "&moodlewsrestformat=json";
+        if (checkexist.exist) {
+          res.send(
+            JSON.stringify({
+              status: true,
+              new_user: false,
+              user_id: checkexist.user_id,
+              message: "User Already Exist in moodle",
+            })
+          );
+        } else {
+          //Creating a link for a moodle webservice
+          var newUrl =
+            "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
+          newUrl +=
+            "&wsfunction=core_user_create_users&users[0][username]=" +
+            encodeURI(req.body["email"].toLowerCase());
+          newUrl +=
+            "&users[0][password]=" +
+            encodeURI(req.body["password"]) +
+            "&users[0][email]=" +
+            encodeURI(req.body["email"]);
+          newUrl +=
+            "&users[0][firstname]=" +
+            encodeURI(req.body["name"]) +
+            "&users[0][lastname]=" +
+            encodeURI(req.body["last"]);
+          newUrl +=
+            "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
+          newUrl += "&moodlewsrestformat=json";
 
-            axios
-              .get(process.env.MOODLE_URL + newUrl)
-              .then((response) => {
-                if (response.data.exception) {
-                  res.send(
-                    JSON.stringify({
-                      status: false,
-                      message: `Error on Creating user: ${response.errorcode} ${response.message}`,
-                      data: req.body,
-                    })
-                  );
-                } else {
-                  res.send(
-                    JSON.stringify({
-                      status: true,
-                      new_user: true,
-                      user_id: response.data[0].id,
-                      message: "User created",
-                    })
-                  );
-                }
-              })
-              .catch((error) => {
+          axios
+            .get(process.env.MOODLE_URL + newUrl)
+            .then((response) => {
+              if (response.data.exception) {
                 res.send(
                   JSON.stringify({
                     status: false,
-                    message: error.message,
+                    message: `Error on Creating user: ${response.data.message}`,
                     data: req.body,
                   })
                 );
-              });
-          }
-        } else {
-          res.send(
-            JSON.stringify({
-              status: false,
-              message: checkexist.message, // ? FIXME: Not sure about checkexist.message
-              data: req.body,
+              } else {
+                res.send(
+                  JSON.stringify({
+                    status: true,
+                    new_user: true,
+                    user_id: response.data[0].id,
+                    message: "User created",
+                  })
+                );
+              }
             })
-          );
+            .catch((error) => {
+              res.send(
+                JSON.stringify({
+                  status: false,
+                  message: `Error on sending a request for creating a user: ${error.message}`,
+                  data: req.body,
+                })
+              );
+            });
         }
       })
       .catch((error) => {
         res.send(
           JSON.stringify({
             status: false,
-            message: error.message,
+            message: `Error on sending a request for checking if user exists: ${error.message}`,
             data: req.body,
           })
         );
