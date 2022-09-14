@@ -138,34 +138,22 @@ router.route("/enrolltocourse").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((result) => {
-            //Checking for an error while enrolling to a course with error detecting algorithm. If there is no error => enrolling to a course
-            console.log(result);
-            if (result.hasOwnProperty("exception")) {
+            if (response.data.new_user) {
+              // self(new_user_email(req.body.user, req.body.product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
               res.send(
                 JSON.stringify({
-                  status: false,
-                  message: result.data.message, // ? FIXME: Not sure if it gonna have a message about error, so should test it
-                  data: req.body,
+                  status: true,
+                  message: "User Created and Enrolled",
                 })
               );
             } else {
-              if (response.data.new_user) {
-                // self(new_user_email(req.body.user, req.body.product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
-                res.send(
-                  JSON.stringify({
-                    status: true,
-                    message: "User Created and Enrolled",
-                  })
-                );
-              } else {
-                // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
-                res.send(
-                  JSON.stringify({
-                    status: true,
-                    message: "User Enrolled",
-                  })
-                );
-              }
+              // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
+              res.send(
+                JSON.stringify({
+                  status: true,
+                  message: "User Enrolled",
+                })
+              );
             }
           })
           .catch((error) => {
@@ -220,23 +208,12 @@ router.route("/unenrollfromcourse").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
-            //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
-            if (response.hasOwnProperty("exception")) {
-              res.send(
-                JSON.stringify({
-                  status: false,
-                  message: "Error on Unenrolling user:" + response.data.message, // ? FIXME: Not sure if it gonna have a message about error, so should test it
-                  data: req.body,
-                })
-              );
-            } else {
-              res.send(
-                JSON.stringify({
-                  status: true,
-                  message: "User Removed",
-                })
-              );
-            }
+            res.send(
+              JSON.stringify({
+                status: true,
+                message: "User Removed",
+              })
+            );
           })
           .catch((error) => {
             res.send(
@@ -251,7 +228,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
         res.send(
           JSON.stringify({
             status: false,
-            message: `User is not found.`, // ? FIXME: to check it change "email" in POSTMAN to smth else
+            message: `User is not found.`,
             data: req.body,
           })
         );
