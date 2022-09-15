@@ -30,7 +30,7 @@ router.route("/createuser").post(function (req, res) {
       }
 
       if (checkexist.exist) {
-        res.send(
+        res.status(409).send(
           JSON.stringify({
             status: true,
             new_user: false,
@@ -63,7 +63,7 @@ router.route("/createuser").post(function (req, res) {
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
             if (response.data.exception) {
-              res.send(
+              res.status(400).send(
                 JSON.stringify({
                   status: false,
                   message: `Error on Creating user: ${response.data.message}`,
@@ -71,7 +71,7 @@ router.route("/createuser").post(function (req, res) {
                 })
               );
             } else {
-              res.send(
+              res.status(201).send(
                 JSON.stringify({
                   status: true,
                   new_user: true,
@@ -82,7 +82,7 @@ router.route("/createuser").post(function (req, res) {
             }
           })
           .catch((error) => {
-            res.send(
+            res.status(400).send(
               JSON.stringify({
                 status: false,
                 message: `Error on sending a request for creating a user: ${error.message}`,
@@ -93,7 +93,7 @@ router.route("/createuser").post(function (req, res) {
       }
     })
     .catch((error) => {
-      res.send(
+      res.status(400).send(
         JSON.stringify({
           status: false,
           message: `Error on sending a request for checking if user exists: ${error.message}`,
@@ -103,6 +103,12 @@ router.route("/createuser").post(function (req, res) {
     });
 });
 
+/** This function creates user if he is still not registered and enrolles a user to a corresponding course
+ * @param  {Object} user Contains all the info about the user that should be created and/or enrolled to course
+ * @param  {number} course_id Contains id of the course that should be enrolled
+ * @param  {} product_details // ? TODO: Create a comment corresponding to a Pangiotis PHP code
+ * @return {JSON} return conditions of request: success or false
+ */
 /** enrolltocourse router
  * @return {JSON} return conditions of request: success or false
  */
@@ -146,7 +152,7 @@ router.route("/enrolltocourse").post(function (req, res) {
           .then((result) => {
             if (response.data.new_user) {
               // self(new_user_email(req.body.user, req.body.product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
-              res.send(
+              res.status(201).send(
                 JSON.stringify({
                   status: true,
                   message: "User Created and Enrolled",
@@ -154,7 +160,7 @@ router.route("/enrolltocourse").post(function (req, res) {
               );
             } else {
               // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
-              res.send(
+              res.status(200).send(
                 JSON.stringify({
                   status: true,
                   message: "User Enrolled",
@@ -163,7 +169,7 @@ router.route("/enrolltocourse").post(function (req, res) {
             }
           })
           .catch((error) => {
-            res.send(
+            res.status(400).send(
               JSON.stringify({
                 status: false,
                 message: `Error on sending a request for enrolling user to a course: ${error.message}`,
@@ -173,7 +179,7 @@ router.route("/enrolltocourse").post(function (req, res) {
           });
       } else {
         res.send(
-          JSON.stringify({
+          JSON.status(400).stringify({
             status: false,
             message: response.data.message,
             data: req.body,
@@ -182,7 +188,7 @@ router.route("/enrolltocourse").post(function (req, res) {
       }
     })
     .catch(function (error) {
-      res.send(
+      res.status(400).send(
         JSON.stringify({
           status: false,
           message: `Error on sending a /createuser request: ${error.message}`,
@@ -192,7 +198,9 @@ router.route("/enrolltocourse").post(function (req, res) {
     });
 });
 
-/** unenrollfromcourse router
+/** This router unenrolles a user from a corresponding course
+ * @param  {string} req.body.user_email Contains email of the user that is going to be unenrolled from course
+ * @param  {integer} req.body.course_id Contains id of the course that is going to unenroll user from
  * @return {JSON} return conditions of request: success or false
  */
 router.route("/unenrollfromcourse").post(function (req, res) {
@@ -217,7 +225,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
-            res.send(
+            res.status(200).send(
               JSON.stringify({
                 status: true,
                 message: "User Removed",
@@ -225,7 +233,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
             );
           })
           .catch((error) => {
-            res.send(
+            res.status(400).send(
               JSON.stringify({
                 status: false,
                 message: `Error on sending a request for unenrolling user to a course: ${error.message}`,
@@ -235,7 +243,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
           });
       } else {
         res.send(
-          JSON.stringify({
+          JSON.status(404).stringify({
             status: false,
             message: `User is not found.`,
             data: req.body,
@@ -244,7 +252,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
       }
     })
     .catch((error) => {
-      res.send(
+      res.status(400).send(
         JSON.stringify({
           status: false,
           message: `Error on sending a request for checking if user exists: ${error.message}`,
