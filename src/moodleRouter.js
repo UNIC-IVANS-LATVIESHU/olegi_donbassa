@@ -30,7 +30,8 @@ router.route("/createuser").post(function (req, res) {
       }
 
       if (checkexist.exist) {
-        res.status(409).send(
+        res.status(200).send(
+          // ! FIXME: 409 - не позволяет передавать ответ дальше и ловится как ошибка
           JSON.stringify({
             status: true,
             new_user: false,
