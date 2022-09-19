@@ -93,7 +93,7 @@ describe("/POST enroll to course", () => {
             message: "User Enrolled",
           })
         );
-
+        console.log(res.text);
         done();
       });
   });
@@ -118,7 +118,6 @@ describe("/POST enroll to course", () => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(400);
         console.log(res.text);
-
         done();
       });
   });

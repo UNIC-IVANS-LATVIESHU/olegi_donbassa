@@ -137,7 +137,7 @@ router.route("/enrolltocourse").post(function (req, res) {
   req.body.user["password"] = password.replace(/,/g, "");
 
   axios
-    .post("http://localhost:3030/createuser", req.body.user) // ! TODO: Change the URL of the request
+    .post("http://127.0.0.1:3030/createuser", req.body.user) // ! TODO: Change the URL of the request
     .then(function (response) {
       if (response.data.status) {
         //Creating a link for a moodle webservice
@@ -151,29 +151,42 @@ router.route("/enrolltocourse").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((result) => {
-            if (response.data.new_user) {
-              // self(new_user_email(req.body.user, req.body.product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
-              res.status(201).send(
+            //Checking for an error while enrolling to a course with error detecting algorithm. If there is no error => enrolling to a course
+            if (result.data.exception) {
+              res.send(
                 JSON.stringify({
-                  status: true,
-                  message: "User Created and Enrolled",
+                  status: false,
+                  message: result.data.message,
+                  data: req.body,
                 })
               );
             } else {
-              // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
-              res.status(200).send(
-                JSON.stringify({
-                  status: true,
-                  message: "User Enrolled",
-                })
-              );
+              if (response.data.new_user) {
+                // self(new_user_email(req.body.user, req.body.product_details)); // ! FIXME: new_user_email Should be created in the PHP part of the code
+                res.status(201).send(
+                  JSON.stringify({
+                    status: true,
+                    message: "User Created and Enrolled",
+                  })
+                );
+              } else {
+                console.log(response.data);
+                console.log(result.data);
+                // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
+                res.status(200).send(
+                  JSON.stringify({
+                    status: true,
+                    message: "User Enrolled",
+                  })
+                );
+              }
             }
           })
-          .catch((error) => {
+          .catch((result) => {
             res.status(400).send(
               JSON.stringify({
                 status: false,
-                message: `Error on sending a request for enrolling user to a course: ${error.message}`,
+                message: `Error on sending a request for enrolling user to a course: ${result.data.message}`,
                 data: req.body,
               })
             );
@@ -226,12 +239,23 @@ router.route("/unenrollfromcourse").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
-            res.status(200).send(
-              JSON.stringify({
-                status: true,
-                message: "User Removed",
-              })
-            );
+            //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
+            if (response.data.exception) {
+              res.send(
+                JSON.stringify({
+                  status: false,
+                  message: "Error on Unenrolling user:" + response.data.message, // ? FIXME: Not sure if it gonna have a message about error, so should test it
+                  data: req.body,
+                })
+              );
+            } else {
+              res.status(200).send(
+                JSON.stringify({
+                  status: true,
+                  message: "User Removed",
+                })
+              );
+            }
           })
           .catch((error) => {
             res.status(400).send(
