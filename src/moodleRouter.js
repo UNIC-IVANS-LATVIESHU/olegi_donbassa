@@ -238,7 +238,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
             //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
-            if (response.data.hasOwnProperty("exception")) {
+            if (response.data != undefined) {
               res.status(400).send(
                 JSON.stringify({
                   status: false,
