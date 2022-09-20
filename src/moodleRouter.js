@@ -63,7 +63,7 @@ router.route("/createuser").post(function (req, res) {
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
-            if (response.data.exception) {
+            if (response.data.hasOwnProperty("exception")) {
               res.status(400).send(
                 JSON.stringify({
                   status: false,
@@ -152,8 +152,8 @@ router.route("/enrolltocourse").post(function (req, res) {
           .get(process.env.MOODLE_URL + newUrl)
           .then((result) => {
             //Checking for an error while enrolling to a course with error detecting algorithm. If there is no error => enrolling to a course
-            if (result.data.exception) {
-              res.send(
+            if (result.data != undefined) {
+              res.status(400).send(
                 JSON.stringify({
                   status: false,
                   message: result.data.message,
@@ -170,8 +170,6 @@ router.route("/enrolltocourse").post(function (req, res) {
                   })
                 );
               } else {
-                console.log(response.data);
-                console.log(result.data);
                 // self(existing_user_email(req.body.user, req.body.product_details)); // ! FIXME: existing_user_email Should be created in the PHP part of the code
                 res.status(200).send(
                   JSON.stringify({
@@ -240,8 +238,8 @@ router.route("/unenrollfromcourse").post(function (req, res) {
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
             //Checking for an error while unenrolling from a course with error detecting algorithm. If there is no error => unenrolling from a course
-            if (response.data.exception) {
-              res.send(
+            if (response.data.hasOwnProperty("exception")) {
+              res.status(400).send(
                 JSON.stringify({
                   status: false,
                   message: "Error on Unenrolling user:" + response.data.message, // ? FIXME: Not sure if it gonna have a message about error, so should test it
