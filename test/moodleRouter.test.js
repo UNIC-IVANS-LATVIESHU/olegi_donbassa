@@ -8,22 +8,24 @@ const app = express();
 chai.use(chaiHttp);
 app.use(express.urlencoded({ extended: false }));
 
-describe("", () => {
+describe("Unit Test of the Moodle API", () => {
+  //This Unit test sends full POST request on /enrolltocourse to get a 200 OK response with corresponding message
   it("/POST enrolltocourse - successful enroll user to a course", (done) => {
+    let requestData = {
+      user: {
+        email: "kosiakov.i@unic.ac.cy",
+        name: "Ivan",
+        last: "Kosiakov",
+      },
+      course_id: "5",
+      product_details: {
+        data: "",
+      },
+    };
     chai
       .request(server)
       .post("/enrolltocourse")
-      .send({
-        user: {
-          email: "kosiakov.i@unic.ac.cy",
-          name: "Ivan",
-          last: "Kosiakov",
-        },
-        course_id: "5",
-        product_details: {
-          data: "",
-        },
-      })
+      .send(requestData)
       .end((err, res) => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(200);
@@ -37,42 +39,47 @@ describe("", () => {
       });
   });
 
+  //This Unit test sends POST request on /enrolltocourse without information about "course_id" to get a 400 Bad response with error message
   it("/POST enrolltocourse - if course undefiend", (done) => {
+    let requestData = {
+      user: {
+        email: "kosiakov.i@unic.ac.cy",
+        name: "Ivan",
+        last: "Kosiakov",
+      },
+      course_id: "",
+      product_details: {
+        data: "",
+      },
+    };
     chai
       .request(server)
       .post("/enrolltocourse")
-      .send({
-        user: {
-          email: "kosiakov.i@unic.ac.cy",
-          name: "Ivan",
-          last: "Kosiakov",
-        },
-        course_id: "",
-        product_details: {
-          data: "",
-        },
-      })
+      .send(requestData)
       .end((err, res) => {
+        resultText = res.text;
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(400);
         done();
       });
   });
 
+  //This Unit test sends full POST request on /createuser to get a 200 OK response with corresponding message
+  // ! This Unit Test requires second web service with premission to delete users on moodle
   it("/POST createuser - successful creation of the user", (done) => {
+    let requestData = {
+      email: "test@unic.ac.cy",
+      password: "tE5|tE5|",
+      name: "Test",
+      last: "Test",
+    };
     chai
       .request(server)
       .post("/createuser")
-      .send({
-        email: "test@unic.ac.cy",
-        password: "tE5|tE5|",
-        name: "Test",
-        last: "Test",
-      })
+      .send(requestData)
       .end((err, res) => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(201);
-
         const answer = JSON.parse(res.text);
         if (answer.user_id) {
           const theLink =
@@ -83,21 +90,22 @@ describe("", () => {
 
           axios.delete(process.env.MOODLE_URL + theLink);
         }
-
         done();
       });
   });
 
+  //This Unit test sends POST request on /createuser witho information about user that already exists in moodle to get a 200 OK response with corresponding message
   it("/POST createuser - if user already exists", (done) => {
+    let requestData = {
+      email: "ivan0kosyakov@gmail.com",
+      password: "ivanIVAN1234@",
+      name: "Ivan",
+      last: "Ivan",
+    };
     chai
       .request(server)
       .post("/createuser")
-      .send({
-        email: "ivan0kosyakov@gmail.com",
-        password: "ivanIVAN1234@",
-        name: "Ivan",
-        last: "Ivan",
-      })
+      .send(requestData)
       .end((err, res) => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(200);
@@ -109,19 +117,18 @@ describe("", () => {
             message: "User Already Exist in moodle",
           })
         );
-
         done();
       });
   });
 
-  it("/POST createuser - if the password does not meet the minimum requirements", (done) => {
+  //This Unit test sends POST request on /createuser with password that does not correspond minimum requirements to get a 400 Bad response with error message
+  it("/POST createuser - if the password does not correspond minimum requirements", (done) => {
     let requestData = {
       email: "test@gmail.com",
       password: "@@",
       name: "Ivan",
       last: "Ivan",
     };
-
     chai
       .request(server)
       .post("/createuser")
@@ -137,11 +144,11 @@ describe("", () => {
             data: requestData,
           })
         );
-
         done();
       });
   });
 
+  //This Unit test sends POST request on /createuser with undefiend email to get a 400 Bad response with error message
   it("/POST createuser - if user email is undefiend", (done) => {
     let requestData = {
       email: "",
@@ -149,7 +156,6 @@ describe("", () => {
       name: "Ivan",
       last: "Ivan",
     };
-
     chai
       .request(server)
       .post("/createuser")
@@ -164,19 +170,20 @@ describe("", () => {
             data: requestData,
           })
         );
-
         done();
       });
   });
 
+  //This Unit test sends full POST request on /unenrollfromcourse to get a 200 OK response
   it("/POST unenrollfromcourse - successful unenroll user from a course", (done) => {
+    let requestData = {
+      user_email: "kosiakov.i@unic.ac.cy",
+      course_id: "5",
+    };
     chai
       .request(server)
       .post("/unenrollfromcourse")
-      .send({
-        user_email: "kosiakov.i@unic.ac.cy",
-        course_id: "5",
-      })
+      .send(requestData)
       .end((err, res) => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(200);
@@ -186,17 +193,16 @@ describe("", () => {
             message: "User Removed",
           })
         );
-
         done();
       });
   });
 
+  //This Unit test sends POST request on /unenrollfromcourse with undefiend course id to get a 400 Bad response with error message
   it("/POST unenrollfromcourse - unenroll user from an undefiend course", (done) => {
     let requestData = {
       user_email: "kosiakov.i@unic.ac.cy",
       course_id: "",
     };
-
     chai
       .request(server)
       .post("/unenrollfromcourse")
@@ -212,17 +218,16 @@ describe("", () => {
             data: requestData,
           })
         );
-
         done();
       });
   });
 
+  //This Unit test sends POST request on /unenrollfromcourse with incorrect course id to get a 400 Bad response with error message
   it("/POST unenrollfromcourse - unenroll user from not existing course", (done) => {
     let requestData = {
       user_email: "kosiakov.i@unic.ac.cy",
       course_id: "5666",
     };
-
     chai
       .request(server)
       .post("/unenrollfromcourse")
@@ -238,7 +243,6 @@ describe("", () => {
             data: requestData,
           })
         );
-
         done();
       });
   });
