@@ -30,6 +30,7 @@ router.route("/createuser").post(function (req, res) {
       }
 
       if (checkexist.exist) {
+        // ✅
         res.status(200).send(
           // ! FIXME: 409 - не позволяет передавать ответ дальше и ловится как ошибка
           JSON.stringify({
@@ -190,8 +191,8 @@ router.route("/enrolltocourse").post(function (req, res) {
             );
           });
       } else {
-        res.send(
-          JSON.status(400).stringify({
+        res.status(400).send(
+          JSON.stringify({
             status: false,
             message: response.data.message,
             data: req.body,
@@ -265,8 +266,8 @@ router.route("/unenrollfromcourse").post(function (req, res) {
             );
           });
       } else {
-        res.send(
-          JSON.status(404).stringify({
+        res.status(404).send(
+          JSON.stringify({
             status: false,
             message: `User is not found.`,
             data: req.body,

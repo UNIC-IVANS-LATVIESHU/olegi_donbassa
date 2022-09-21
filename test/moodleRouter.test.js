@@ -16,7 +16,6 @@ describe("", () => {
       .send({
         user: {
           email: "kosiakov.i@unic.ac.cy",
-          password: "ivanIVAN1234@",
           name: "Ivan",
           last: "Kosiakov",
         },
@@ -45,7 +44,6 @@ describe("", () => {
       .send({
         user: {
           email: "kosiakov.i@unic.ac.cy",
-          password: "ivanIVAN1234@",
           name: "Ivan",
           last: "Kosiakov",
         },
@@ -116,6 +114,61 @@ describe("", () => {
       });
   });
 
+  it("/POST createuser - if the password does not meet the minimum requirements", (done) => {
+    let requestData = {
+      email: "test@gmail.com",
+      password: "@@",
+      name: "Ivan",
+      last: "Ivan",
+    };
+
+    chai
+      .request(server)
+      .post("/createuser")
+      .send(requestData)
+      .end((err, res) => {
+        chai.expect(err).to.be.null;
+        chai.expect(res).to.have.status(400);
+        chai.expect(res.text).to.equal(
+          JSON.stringify({
+            status: false,
+            message:
+              "Error on Creating user: error/<div>Passwords must be at least 8 characters long.</div><div>Passwords must have at least 1 digit(s).</div><div>Passwords must have at least 1 lower case letter(s).</div><div>Passwords must have at least 1 upper case letter(s).</div>",
+            data: requestData,
+          })
+        );
+
+        done();
+      });
+  });
+
+  it("/POST createuser - if user email is undefiend", (done) => {
+    let requestData = {
+      email: "",
+      password: "ivanIVAN1234@",
+      name: "Ivan",
+      last: "Ivan",
+    };
+
+    chai
+      .request(server)
+      .post("/createuser")
+      .send(requestData)
+      .end((err, res) => {
+        chai.expect(err).to.be.null;
+        chai.expect(res).to.have.status(400);
+        chai.expect(res.text).to.equal(
+          JSON.stringify({
+            status: false,
+            message: "Error on Creating user: Invalid parameter value detected",
+            data: requestData,
+          })
+        );
+
+        done();
+      });
+  });
+
   it("/POST unenrollfromcourse - successful unenroll user from a course", (done) => {
     chai
       .request(server)
@@ -139,13 +192,15 @@ describe("", () => {
   });
 
   it("/POST unenrollfromcourse - unenroll user from an undefiend course", (done) => {
+    let requestData = {
+      user_email: "kosiakov.i@unic.ac.cy",
+      course_id: "",
+    };
+
     chai
       .request(server)
       .post("/unenrollfromcourse")
-      .send({
-        user_email: "kosiakov.i@unic.ac.cy",
-        course_id: "",
-      })
+      .send(requestData)
       .end((err, res) => {
         chai.expect(err).to.be.null;
         chai.expect(res).to.have.status(400);
@@ -154,7 +209,33 @@ describe("", () => {
             status: false,
             message:
               "Error on Unenrolling user:Invalid parameter value detected",
-            data: { user_email: "kosiakov.i@unic.ac.cy", course_id: "" },
+            data: requestData,
+          })
+        );
+
+        done();
+      });
+  });
+
+  it("/POST unenrollfromcourse - unenroll user from not existing course", (done) => {
+    let requestData = {
+      user_email: "kosiakov.i@unic.ac.cy",
+      course_id: "5666",
+    };
+
+    chai
+      .request(server)
+      .post("/unenrollfromcourse")
+      .send(requestData)
+      .end((err, res) => {
+        chai.expect(err).to.be.null;
+        chai.expect(res).to.have.status(400);
+        chai.expect(res.text).to.equal(
+          JSON.stringify({
+            status: false,
+            message:
+              "Error on Unenrolling user:Can't find data record in database table course.",
+            data: requestData,
           })
         );
 
