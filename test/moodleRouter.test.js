@@ -8,8 +8,8 @@ const app = express();
 chai.use(chaiHttp);
 app.use(express.urlencoded({ extended: false }));
 
-describe("/POST enroll to course", () => {
-  it("it should enroll a user", (done) => {
+describe("", () => {
+  it("/POST enrolltocourse - successful enroll user to a course", (done) => {
     chai
       .request(server)
       .post("/enrolltocourse")
@@ -38,7 +38,7 @@ describe("/POST enroll to course", () => {
       });
   });
 
-  it("if course undefiend", (done) => {
+  it("/POST enrolltocourse - if course undefiend", (done) => {
     chai
       .request(server)
       .post("/enrolltocourse")
@@ -61,7 +61,7 @@ describe("/POST enroll to course", () => {
       });
   });
 
-  it("it should create a user", (done) => {
+  it("/POST createuser - successful creation of the user", (done) => {
     chai
       .request(server)
       .post("/createuser")
@@ -90,7 +90,7 @@ describe("/POST enroll to course", () => {
       });
   });
 
-  it("if user already exists", (done) => {
+  it("/POST createuser - if user already exists", (done) => {
     chai
       .request(server)
       .post("/createuser")
@@ -109,6 +109,52 @@ describe("/POST enroll to course", () => {
             new_user: false,
             user_id: 20,
             message: "User Already Exist in moodle",
+          })
+        );
+
+        done();
+      });
+  });
+
+  it("/POST unenrollfromcourse - successful unenroll user from a course", (done) => {
+    chai
+      .request(server)
+      .post("/unenrollfromcourse")
+      .send({
+        user_email: "kosiakov.i@unic.ac.cy",
+        course_id: "5",
+      })
+      .end((err, res) => {
+        chai.expect(err).to.be.null;
+        chai.expect(res).to.have.status(200);
+        chai.expect(res.text).to.equal(
+          JSON.stringify({
+            status: true,
+            message: "User Removed",
+          })
+        );
+
+        done();
+      });
+  });
+
+  it("/POST unenrollfromcourse - unenroll user from an undefiend course", (done) => {
+    chai
+      .request(server)
+      .post("/unenrollfromcourse")
+      .send({
+        user_email: "kosiakov.i@unic.ac.cy",
+        course_id: "",
+      })
+      .end((err, res) => {
+        chai.expect(err).to.be.null;
+        chai.expect(res).to.have.status(400);
+        chai.expect(res.text).to.equal(
+          JSON.stringify({
+            status: false,
+            message:
+              "Error on Unenrolling user:Invalid parameter value detected",
+            data: { user_email: "kosiakov.i@unic.ac.cy", course_id: "" },
           })
         );
 
