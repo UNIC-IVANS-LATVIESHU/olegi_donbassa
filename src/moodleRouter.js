@@ -3,16 +3,23 @@ var axios = require("axios");
 var router = express.Router();
 var _ = require("lodash");
 
-/** createuser router
+/** This router creates user if he is still not registered
+ * @param  {string} req.body.email Contains email of the user that should be created on moodle
+ * @param  {string} req.body.password Contains password of the user that should be created on moodle
+ * @param  {string} req.body.name Contains first name of the user that should be created on moodle
+ * @param  {string} req.body.last Contains last name of the user that should be created on moodle
  * @return {JSON} return conditions of request: success or false
  */
 router.route("/createuser").post(function (req, res) {
+  //Creating a link for a moodle webservice to check if user exists
   let theUrl =
     "/webservice/rest/server.php?wstoken=" +
     process.env.MOODLE_TOKEN +
     "&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=" +
     encodeURI(req.body["email"]) +
     "&moodlewsrestformat=json";
+
+  //Sending a request to a moodle to get a response with corresponding information
   axios
     .get(process.env.MOODLE_URL + theUrl)
     .then((result) => {
@@ -30,9 +37,7 @@ router.route("/createuser").post(function (req, res) {
       }
 
       if (checkexist.exist) {
-        // ✅
         res.status(200).send(
-          // ! FIXME: 409 - не позволяет передавать ответ дальше и ловится как ошибка
           JSON.stringify({
             status: true,
             new_user: false,
@@ -41,7 +46,7 @@ router.route("/createuser").post(function (req, res) {
           })
         );
       } else {
-        //Creating a link for a moodle webservice
+        //Creating a link for a moodle webservice to create a user
         var newUrl =
           "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
         newUrl +=
@@ -61,6 +66,7 @@ router.route("/createuser").post(function (req, res) {
           "&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=IFF";
         newUrl += "&moodlewsrestformat=json";
 
+        //Sending a request to a moodle to get a response with corresponding information
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
@@ -105,13 +111,10 @@ router.route("/createuser").post(function (req, res) {
     });
 });
 
-/** This function creates user if he is still not registered and enrolles a user to a corresponding course
- * @param  {Object} user Contains all the info about the user that should be created and/or enrolled to course
- * @param  {number} course_id Contains id of the course that should be enrolled
- * @param  {} product_details // ? TODO: Create a comment corresponding to a Pangiotis PHP code
- * @return {JSON} return conditions of request: success or false
- */
-/** enrolltocourse router
+/** This router creates user if he is still not registered and enrolles a user to a corresponding course
+ * @param  {Object} req.body.user Contains all the info about the user that should be created and/or enrolled to course
+ * @param  {number} req.body.course_id Contains id of the course that should be enrolled
+ * @param  {} product_details // ! TODO: Create a comment corresponding to a Pangiotis PHP code
  * @return {JSON} return conditions of request: success or false
  */
 router.route("/enrolltocourse").post(function (req, res) {
@@ -137,18 +140,20 @@ router.route("/enrolltocourse").post(function (req, res) {
   password = _.shuffle(password) + "";
   req.body.user["password"] = password.replace(/,/g, "");
 
+  //Sending a request to a create user api to get a response with corresponding information
   axios
     .post("http://127.0.0.1:3030/createuser", req.body.user) // ! TODO: Change the URL of the request
     .then(function (response) {
       if (response.data.status) {
-        //Creating a link for a moodle webservice
+        //Creating a link for a moodle webservice to enroll user to a course
         let newUrl =
           "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
         newUrl +=
           "&wsfunction=enrol_manual_enrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
           response.data.user_id;
         newUrl += "&enrolments[0][courseid]=" + req.body.course_id;
-        // Preparing result with all data taken from a moodle
+
+        //Sending a request to a moodle to get a response with corresponding information
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((result) => {
@@ -217,6 +222,7 @@ router.route("/enrolltocourse").post(function (req, res) {
  * @return {JSON} return conditions of request: success or false
  */
 router.route("/unenrollfromcourse").post(function (req, res) {
+  //Creating a link for a moodle webservice to check if user exists
   let theUrl =
     "/webservice/rest/server.php?wstoken=" +
     process.env.MOODLE_TOKEN +
@@ -227,14 +233,15 @@ router.route("/unenrollfromcourse").post(function (req, res) {
     .get(process.env.MOODLE_URL + theUrl)
     .then((result) => {
       if (result.data.users[0]) {
-        // Creating a link for a moodle webservice
+        //Creating a link for a moodle webservice to unenroll user to a course
         let newUrl =
           "/webservice/rest/server.php?wstoken=" + process.env.MOODLE_TOKEN;
         newUrl +=
           "&wsfunction=enrol_manual_unenrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=" +
           result.data.users[0].id;
         newUrl += "&enrolments[0][courseid]=" + req.body.course_id;
-        // Preparing result with all data taken from a moodle
+
+        //Sending a request to a moodle to get a response with corresponding information
         axios
           .get(process.env.MOODLE_URL + newUrl)
           .then((response) => {
