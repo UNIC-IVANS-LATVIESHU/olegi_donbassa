@@ -15,17 +15,20 @@ moodle_client
 
 const app = require("./app");
 
+//Handling uncaught exceptions with further shutdown
 process.on("uncaughtException", (err) => {
   console.log("UNCAUGHT EXCEPTION! Shutting down...");
   console.log(err.name, err.message);
   process.exit(1);
 });
 
+// ? TODO: Move the server on your port
 const port = process.env.PORT || 3030;
 const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
 
+// Handling unhandled rejections with further shutdown
 process.on("unhandledRejection", (err) => {
   console.log("UNHANDLED REJECTION! Shutting down...");
   console.log(err.name, err.message);

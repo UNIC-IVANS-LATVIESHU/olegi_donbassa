@@ -11,15 +11,20 @@ app.use(
   })
 );
 
+// This middleware used to check the integration settings before every request
 app.use((req, res, next) => {
-  if (process.env.MOODLE_TOKEN === "" || process.env.MOODLE_URL === "") {
-    next(
-      JSON.stringify({
-        status: false,
-        message:
-          "One or more integration settings are empty. Please complete all moodle integration settings",
-      })
-    );
+  if (
+    process.env.MOODLE_TOKEN == undefined ||
+    process.env.MOODLE_URL == undefined ||
+    process.env.MOODLE_TOKEN == "" ||
+    process.env.MOODLE_URL == ""
+  ) {
+    res.status(500).json({
+      status: false,
+      message:
+        "One or more integration settings are empty. Please complete all moodle integration settings",
+    });
+    return;
   } else {
     next();
   }
