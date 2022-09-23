@@ -65,7 +65,7 @@ describe("Unit Test of the Moodle API", () => {
   });
 
   //This Unit test sends full POST request on /createuser to get a 200 OK response with corresponding message
-  // ! This Unit Test requires second web service with premission to delete users on moodle
+  // ! This Unit Test requires second web service with premission to delete users on moodle (core_user_delete_users)
   it("/POST createuser - successful creation of the user", (done) => {
     let requestData = {
       email: "test@unic.ac.cy",
