@@ -114,7 +114,7 @@ router.route("/createuser").post(function (req, res) {
 /** This router creates user if he is still not registered and enrolles a user to a corresponding course
  * @param  {Object} req.body.user Contains all the info about the user that should be created and/or enrolled to course
  * @param  {number} req.body.course_id Contains id of the course that should be enrolled
- * @param  {} product_details // ! TODO: Create a comment corresponding to a Pangiotis PHP code
+ * @param  {Object} product_details Contains information about product (product_sku, prod_dep, product_name, etc.) that will be used in email
  * @return {JSON} return conditions of request: success or false
  */
 router.route("/enrolltocourse").post(function (req, res) {
