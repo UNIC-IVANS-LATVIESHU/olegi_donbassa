@@ -250,7 +250,7 @@ router.route("/unenrollfromcourse").post(function (req, res) {
               res.status(400).send(
                 JSON.stringify({
                   status: false,
-                  message: "Error on Unenrolling user:" + response.data.message, // ? FIXME: Not sure if it gonna have a message about error, so should test it
+                  message: "Error on Unenrolling user:" + response.data.message,
                   data: req.body,
                 })
               );
