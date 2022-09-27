@@ -1,7 +1,24 @@
-var express = require("express");
-var axios = require("axios");
-var router = express.Router();
-var _ = require("lodash");
+const express = require("express");
+const router = express.Router();
+const moodle = require('./moodle');
+
+router.get("/",(req,res)=>{
+  res.send("Moodle Integration")
+})
+
+router.get("/enroll",(req,res)=>{
+  moodle.enroll(req,(response)=>{
+    res.json(response)
+  })
+})
+
+router.get("/unenroll",(req,res)=>{
+  moodle.unenroll(req,(response)=>{
+    res.json(response)
+  })
+})
+/*const axios = require("axios");
+const _ = require("lodash");*/
 
 /** This router creates user if he is still not registered
  * @param  {string} req.body.email Contains email of the user that should be created on moodle
@@ -10,7 +27,7 @@ var _ = require("lodash");
  * @param  {string} req.body.last Contains last name of the user that should be created on moodle
  * @return {JSON} return conditions of request: success or false
  */
-router.route("/createuser").post(function (req, res) {
+/*router.route("/createuser").post(function (req, res) {
   //Creating a link for a moodle webservice to check if user exists
   let theUrl =
     "/webservice/rest/server.php?wstoken=" +
@@ -110,14 +127,14 @@ router.route("/createuser").post(function (req, res) {
       );
     });
 });
-
+*/
 /** This router creates user if he is still not registered and enrolles a user to a corresponding course
  * @param  {Object} req.body.user Contains all the info about the user that should be created and/or enrolled to course
  * @param  {number} req.body.course_id Contains id of the course that should be enrolled
  * @param  {Object} req.body.product_details Contains information about product (product_sku, prod_dep, product_name, etc.) that will be used in email
  * @return {JSON} return conditions of request: success or false
  */
-router.route("/enrolltocourse").post(function (req, res) {
+/*router.route("/enrolltocourse").post(function (req, res) {
   const PASS_LENGTH = 8;
 
   var sets = [
@@ -215,13 +232,13 @@ router.route("/enrolltocourse").post(function (req, res) {
       );
     });
 });
-
+*/
 /** This router unenrolles a user from a corresponding course
  * @param  {string} req.body.user_email Contains email of the user that is going to be unenrolled from course
  * @param  {integer} req.body.course_id Contains id of the course that is going to unenroll user from
  * @return {JSON} return conditions of request: success or false
  */
-router.route("/unenrollfromcourse").post(function (req, res) {
+/*router.route("/unenrollfromcourse").post(function (req, res) {
   //Creating a link for a moodle webservice to check if user exists
   let theUrl =
     "/webservice/rest/server.php?wstoken=" +
@@ -292,5 +309,5 @@ router.route("/unenrollfromcourse").post(function (req, res) {
       );
     });
 });
-
+*/
 module.exports = router;
