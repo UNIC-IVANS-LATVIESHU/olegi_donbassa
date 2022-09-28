@@ -2,6 +2,10 @@ const axios = require("axios");
 const { response } = require("express");
 const _ = require("lodash");
 
+/** This function checks by email if user exists in moodle and send corresponding callback
+ * @param  {string} req.body.email Contains email of the user that is going to be checked if exists in moodle
+ * @return {JSON} return conditions of request: success or false
+ */
 const check_if_exists = (req, cb) => {
   let theUrl = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${
     process.env.MOODLE_TOKEN
@@ -35,6 +39,13 @@ const check_if_exists = (req, cb) => {
     });
 };
 
+/** This function creates user if he is still not registered
+ * @param  {string} req.body.email Contains email of the user that should be created on moodle
+ * @param  {string} req.body.password Contains password of the user that should be created on moodle
+ * @param  {string} req.body.name Contains first name of the user that should be created on moodle
+ * @param  {string} req.body.last Contains last name of the user that should be created on moodle
+ * @return {JSON} return conditions of request: success or false
+ */
 const create_user = (req, cb) => {
   const PASS_LENGTH = 8;
   var sets = [
@@ -93,6 +104,12 @@ const create_user = (req, cb) => {
     });
 };
 
+/** This function creates user if he is still not registered and enrolles a user to a corresponding course
+ * @param  {Object} req.body.user Contains all the info about the user that should be created and/or enrolled to course
+ * @param  {number} req.body.course_id Contains id of the course that should be enrolled
+ * @param  {Object} req.body.product_details Contains information about product (product_sku, prod_dep, product_name, etc.) that will be used in email
+ * @return {JSON} return conditions of request: success or false
+ */
 const enroll = (req, cb) => {
   check_if_exists(req, (exist) => {
     if (!exist.status) {
@@ -175,6 +192,11 @@ const enroll = (req, cb) => {
   });
 };
 
+/** This function unenrolles a user from a corresponding course
+ * @param  {string} req.body.user_email Contains email of the user that is going to be unenrolled from course
+ * @param  {integer} req.body.course_id Contains id of the course that is going to unenroll user from
+ * @return {JSON} return conditions of request: success or false
+ */
 const unenroll = (req, cb) => {
   check_if_exists(req, (exists) => {
     if (exists.status) {
