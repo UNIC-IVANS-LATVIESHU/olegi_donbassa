@@ -7,11 +7,13 @@ const _ = require("lodash");
  * @return {JSON} return conditions of request: success or false
  */
 const check_if_exists = (req, cb) => {
+  //Creating a link for a moodle webservice to check if user exists
   let theUrl = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${
     process.env.MOODLE_TOKEN
   }&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=${encodeURI(
     req.body["email"]
   )}&moodlewsrestformat=json`;
+  //Sending a request to a moodle to get a response with corresponding information
   axios
     .get(theUrl)
     .then((result) => {
@@ -47,6 +49,7 @@ const check_if_exists = (req, cb) => {
  * @return {JSON} return conditions of request: success or false
  */
 const create_user = (req, cb) => {
+  //Generator of the random passwords
   const PASS_LENGTH = 8;
   var sets = [
     "abcdefghjkmnpqrstuvwxyz",
@@ -65,6 +68,7 @@ const create_user = (req, cb) => {
     password += all[Math.floor(Math.random() * all.length)];
   }
   password = _.shuffle(password) + "";
+  //Creating a link for a moodle webservice to create a user
   let url = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${
     process.env.MOODLE_TOKEN
   }"&wsfunction=core_user_create_users&users[0][username]=${encodeURI(
@@ -76,6 +80,7 @@ const create_user = (req, cb) => {
   )}&users[0][lastname]=${encodeURI(
     req.body["last"]
   )}&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=&moodlewsrestformat=json`;
+  //Sending a request to a moodle to get a response with corresponding information
   axios
     .get(url)
     .then((response) => {
@@ -111,6 +116,7 @@ const create_user = (req, cb) => {
  * @return {JSON} return conditions of request: success or false
  */
 const enroll = (req, cb) => {
+  //Calling a function to check if user exist in the moodle
   check_if_exists(req, (exist) => {
     if (!exist.status) {
       if (exist.error) {
@@ -120,9 +126,12 @@ const enroll = (req, cb) => {
           data: exist.data,
         });
       }
+      //Calling a function to create a user if he does not exists
       create_user(req, (create) => {
         if (create.status) {
+          //Creating a link for a moodle webservice to enroll created user to a course
           let enrolurl = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${process.env.MOODLE_TOKEN}&wsfunction=enrol_manual_enrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=${create.user_id}&enrolments[0][courseid]=${req.body.course_id}`;
+          //Sending a request to a moodle to get a response with corresponding information
           axios
             .get(enrolurl)
             .then((result) => {
@@ -160,7 +169,9 @@ const enroll = (req, cb) => {
         }
       });
     } else {
+      //Creating a link for a moodle webservice to enroll created user to a course
       let enrolurl = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${process.env.MOODLE_TOKEN}&wsfunction=enrol_manual_enrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=${exist.user_id}&enrolments[0][courseid]=${req.body.course_id}`;
+      //Sending a request to a moodle to get a response with corresponding information
       axios
         .get(enrolurl)
         .then((result) => {
@@ -198,9 +209,12 @@ const enroll = (req, cb) => {
  * @return {JSON} return conditions of request: success or false
  */
 const unenroll = (req, cb) => {
+  //Calling a function to check if user exist in the moodle
   check_if_exists(req, (exists) => {
     if (exists.status) {
+      //Creating a link for a moodle webservice to unenroll user to a course
       let unenroll_url = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${process.env.MOODLE_TOKEN}&wsfunction=enrol_manual_unenrol_users&moodlewsrestformat=json&enrolments[0][roleid]=5&enrolments[0][userid]=${exists.user_id}&enrolments[0][courseid]=${req.body.course_id}`;
+      //Sending a request to a moodle to get a response with corresponding information
       axios
         .get(unenroll_url)
         .then((response) => {
@@ -230,6 +244,7 @@ const unenroll = (req, cb) => {
   });
 };
 
+//Exporting all functions
 module.exports = {
   check_if_exists: check_if_exists,
   create_user: create_user,
