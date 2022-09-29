@@ -3,7 +3,7 @@ const { response } = require("express");
 const _ = require("lodash");
 
 /** This function checks by email if user exists in moodle and send corresponding callback
- * @param  {string} req.body.email Contains email of the user that is going to be checked if exists in moodle
+ * @param  {string} req.body.user.email Contains email of the user that is going to be checked if exists in moodle
  * @return {JSON} return conditions of request: success or false
  */
 const check_if_exists = (req, cb) => {
@@ -11,13 +11,13 @@ const check_if_exists = (req, cb) => {
   let theUrl = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${
     process.env.MOODLE_TOKEN
   }&wsfunction=core_user_get_users&criteria[0][key]=email&criteria[0][value]=${encodeURI(
-    req.body["email"]
+    req.body.user["email"]
   )}&moodlewsrestformat=json`;
   //Sending a request to a moodle to get a response with corresponding information
   axios
     .get(theUrl)
     .then((result) => {
-      if (result.data.user.length < 1) {
+      if (Object.keys(result.data.users).length < 1) {
         return cb({
           status: false,
           error: false,
@@ -42,10 +42,9 @@ const check_if_exists = (req, cb) => {
 };
 
 /** This function creates user if he is still not registered
- * @param  {string} req.body.email Contains email of the user that should be created on moodle
- * @param  {string} req.body.password Contains password of the user that should be created on moodle
- * @param  {string} req.body.name Contains first name of the user that should be created on moodle
- * @param  {string} req.body.last Contains last name of the user that should be created on moodle
+ * @param  {string} req.body.user.email Contains email of the user that should be created on moodle
+ * @param  {string} req.body.user.name Contains first name of the user that should be created on moodle
+ * @param  {string} req.body.user.last Contains last name of the user that should be created on moodle
  * @return {JSON} return conditions of request: success or false
  */
 const create_user = (req, cb) => {
@@ -68,18 +67,20 @@ const create_user = (req, cb) => {
     password += all[Math.floor(Math.random() * all.length)];
   }
   password = _.shuffle(password) + "";
+  password = password.replace(/,/g, "");
   //Creating a link for a moodle webservice to create a user
   let url = `${process.env.MOODLE_URL}/webservice/rest/server.php?wstoken=${
     process.env.MOODLE_TOKEN
-  }"&wsfunction=core_user_create_users&users[0][username]=${encodeURI(
-    req.body["email"].toLowerCase()
+  }&wsfunction=core_user_create_users&users[0][username]=${encodeURI(
+    req.body.user["email"].toLowerCase()
   )}&users[0][password]=${encodeURI(password)}&users[0][email]=${encodeURI(
-    req.body["email"]
+    req.body.user["email"]
   )}&users[0][firstname]=${encodeURI(
-    req.body["name"]
+    req.body.user["name"]
   )}&users[0][lastname]=${encodeURI(
-    req.body["last"]
+    req.body.user["last"]
   )}&users[0][customfields][0][type]=programid&users[0][customfields][0][value]=&moodlewsrestformat=json`;
+
   //Sending a request to a moodle to get a response with corresponding information
   axios
     .get(url)
@@ -142,7 +143,7 @@ const enroll = (req, cb) => {
                   data: req.body,
                 });
               } else {
-                if (response.data.new_user) {
+                if (create.new_user) {
                   return cb({
                     status: true,
                     new: create.new_user,
@@ -182,14 +183,12 @@ const enroll = (req, cb) => {
               data: req.body,
             });
           } else {
-            if (response.data.new_user) {
-              return cb({
-                status: true,
-                new: false,
-                user_id: exist.user_id,
-                message: "User Enrolled into course",
-              });
-            }
+            return cb({
+              status: true,
+              new: false,
+              user_id: exist.user_id,
+              message: "User Enrolled into course",
+            });
           }
         })
         .catch((error) => {
@@ -204,7 +203,7 @@ const enroll = (req, cb) => {
 };
 
 /** This function unenrolles a user from a corresponding course
- * @param  {string} req.body.user_email Contains email of the user that is going to be unenrolled from course
+ * @param  {string} req.body.user.email Contains email of the user that is going to be unenrolled from course
  * @param  {integer} req.body.course_id Contains id of the course that is going to unenroll user from
  * @return {JSON} return conditions of request: success or false
  */

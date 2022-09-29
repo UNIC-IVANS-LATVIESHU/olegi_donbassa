@@ -1,22 +1,22 @@
 const express = require("express");
 const router = express.Router();
-const moodle = require('./moodle');
+const moodle = require("./moodle");
 
-router.get("/",(req,res)=>{
-  res.send("Moodle Integration")
-})
+router.get("/", (req, res) => {
+  res.send("Moodle Integration");
+});
 
-router.get("/enroll",(req,res)=>{
-  moodle.enroll(req,(response)=>{
-    res.json(response)
-  })
-})
+router.get("/enroll", (req, res) => {
+  moodle.enroll(req, (response) => {
+    res.json(response);
+  });
+});
 
-router.get("/unenroll",(req,res)=>{
-  moodle.unenroll(req,(response)=>{
-    res.json(response)
-  })
-})
+router.get("/unenroll", (req, res) => {
+  moodle.unenroll(req, (response) => {
+    res.json(response);
+  });
+});
 /*const axios = require("axios");
 const _ = require("lodash");*/
 
